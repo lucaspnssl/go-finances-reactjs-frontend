@@ -20,22 +20,37 @@ interface FileProps {
 
 const Import: React.FC = () => {
   const [uploadedFiles, setUploadedFiles] = useState<FileProps[]>([]);
+  const [error, setError] = useState<string>();
   const history = useHistory();
 
   async function handleUpload(): Promise<void> {
-    // const data = new FormData();
+    if (uploadedFiles.length === 0) {
+      setError('Escolha um arquivo válido para realizar a importação.');
+      return;
+    }
 
-    // TODO
+    const data = new FormData();
+    const uploadedFile = uploadedFiles[0];
 
+    data.append('file', uploadedFile.file, uploadedFile.name);
     try {
-      // await api.post('/transactions/import', data);
+      await api.post('/transactions/import', data);
+      setError('');
+      history.push('/');
     } catch (err) {
-      // console.log(err.response.error);
+      setError('Não foi possível importar os dados do arquivo.');
     }
   }
 
   function submitFile(files: File[]): void {
-    // TODO
+    const uploadedFilesProps: FileProps[] = files.map(file => ({
+      name: file.name,
+      file,
+      readableSize: filesize(file.size),
+    }));
+
+    setUploadedFiles(uploadedFilesProps);
+    setError('');
   }
 
   return (
@@ -45,6 +60,7 @@ const Import: React.FC = () => {
         <Title>Importar uma transação</Title>
         <ImportFileContainer>
           <Upload onUpload={submitFile} />
+          {error && <p>{error}</p>}
           {!!uploadedFiles.length && <FileList files={uploadedFiles} />}
 
           <Footer>
